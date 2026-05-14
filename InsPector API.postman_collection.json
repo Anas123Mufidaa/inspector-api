@@ -1,0 +1,1389 @@
+{
+  "info": {
+    "_postman_id": "e46d084a-112b-47aa-a686-6e7def63615b",
+    "name": "InsPector API",
+    "description": "API collection untuk InsPector\n\n**Setup:**\n\n1. Import collection ini\n    \n2. Buat environment baru, isi variable:\n    - `base_url` → `http://localhost:3000/api`\n        \n    - `access_token` → (otomatis terisi setelah hit Google Callback)\n        \n    - `refresh_token` → (otomatis terisi setelah hit Google Callback)\n        \n3. Jalankan request sesuai urutan flow",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "49534649",
+    "_collection_link": "https://go.postman.co/collection/49534649-e46d084a-112b-47aa-a686-6e7def63615b?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "1. Start Google OAuth",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/auth/google",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "google"
+              ]
+            },
+            "description": "Buka URL ini di browser — bukan di Postman.\nGoogle akan redirect ke consent screen lalu callback.\n\nURL: {{base_url}}/auth/google"
+          },
+          "response": []
+        },
+        {
+          "name": "2. Google Callback (Simulate)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.status === 'success') {",
+                  "  pm.collectionVariables.set('access_token',  res.data.accessToken);",
+                  "  pm.collectionVariables.set('refresh_token', res.data.refreshToken);",
+                  "  pm.test('Login berhasil — token tersimpan', () => pm.response.to.have.status(200));",
+                  "} else {",
+                  "  pm.test('Login gagal', () => { throw new Error(res.message); });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/auth/google/callback",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "google",
+                "callback"
+              ]
+            },
+            "description": "Callback otomatis dari Google setelah user consent.\nScript test akan otomatis simpan access_token & refresh_token ke collection variables.\n\nResponse 200:\n{\n  status, message,\n  data: { accessToken, refreshToken, user: { id, name, email, avatar_url } }\n}"
+          },
+          "response": [
+            {
+              "name": "200 — Berhasil",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/auth/google/callback",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "google",
+                    "callback"
+                  ]
+                },
+                "description": "Callback otomatis dari Google setelah user consent.\nScript test akan otomatis simpan access_token & refresh_token ke collection variables.\n\nResponse 200:\n{\n  status, message,\n  data: { accessToken, refreshToken, user: { id, name, email, avatar_url } }\n}"
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "Text",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"Authentication berhasil\",\n  \"data\": {\n    \"accessToken\": \"eyJhbGci...\",\n    \"refreshToken\": \"eyJhbGci...\",\n    \"user\": {\n      \"id\": \"uuid\",\n      \"name\": \"Budi Santoso\",\n      \"email\": \"budi@gmail.com\",\n      \"avatar_url\": \"https://lh3.googleusercontent.com/...\"\n    }\n  }\n}"
+            },
+            {
+              "name": "401 — OAuth Gagal",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/auth/google/callback",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "google",
+                    "callback"
+                  ]
+                },
+                "description": "Callback otomatis dari Google setelah user consent.\nScript test akan otomatis simpan access_token & refresh_token ke collection variables.\n\nResponse 200:\n{\n  status, message,\n  data: { accessToken, refreshToken, user: { id, name, email, avatar_url } }\n}"
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "_postman_previewlanguage": "Text",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"status\": \"fail\",\n  \"message\": \"OAuth authentication gagal\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "3. Get Me",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Data user ada', () => {",
+                  "  const res = pm.response.json();",
+                  "  pm.expect(res.data).to.have.property('email');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/me",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "me"
+              ]
+            },
+            "description": "Ambil data user yang sedang login berdasarkan JWT.\nGunakan untuk restore session saat app pertama load.\n\nResponse 200:\n{\n  data: { id, name, email, avatar_url, created_at }\n}"
+          },
+          "response": [
+            {
+              "name": "200 — Berhasil",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{access_token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/auth/me",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "me"
+                  ]
+                },
+                "description": "Ambil data user yang sedang login berdasarkan JWT.\nGunakan untuk restore session saat app pertama load.\n\nResponse 200:\n{\n  data: { id, name, email, avatar_url, created_at }\n}"
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "Text",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"Data user berhasil diambil\",\n  \"data\": {\n    \"id\": \"uuid\",\n    \"name\": \"Budi Santoso\",\n    \"email\": \"budi@gmail.com\",\n    \"avatar_url\": \"https://...\",\n    \"created_at\": \"2026-01-15T08:00:00Z\"\n  }\n}"
+            },
+            {
+              "name": "401 — Token tidak valid",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{access_token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/auth/me",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "me"
+                  ]
+                },
+                "description": "Ambil data user yang sedang login berdasarkan JWT.\nGunakan untuk restore session saat app pertama load.\n\nResponse 200:\n{\n  data: { id, name, email, avatar_url, created_at }\n}"
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "_postman_previewlanguage": "Text",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"status\": \"fail\",\n  \"message\": \"Token tidak ditemukan\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "4. Refresh Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.status === 'success') {",
+                  "  pm.collectionVariables.set('access_token', res.data.accessToken);",
+                  "  pm.test('Access token diperbarui', () => pm.response.to.have.status(200));",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refresh_token}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/refresh",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "refresh"
+              ]
+            },
+            "description": "Perbarui access token menggunakan refresh token.\nScript test otomatis update collection variable access_token.\n\nPanggil ini ketika request lain return 401.\n\nResponse 200:\n{\n  data: { accessToken: '...' }\n}"
+          },
+          "response": [
+            {
+              "name": "200 — Token diperbarui",
+              "originalRequest": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"refreshToken\": \"{{refresh_token}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{base_url}}/auth/refresh",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "refresh"
+                  ]
+                },
+                "description": "Perbarui access token menggunakan refresh token.\nScript test otomatis update collection variable access_token.\n\nPanggil ini ketika request lain return 401.\n\nResponse 200:\n{\n  data: { accessToken: '...' }\n}"
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "Text",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"Access token berhasil diperbarui\",\n  \"data\": { \"accessToken\": \"eyJhbGci...\" }\n}"
+            },
+            {
+              "name": "400 — Refresh token tidak valid",
+              "originalRequest": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"refreshToken\": \"{{refresh_token}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{base_url}}/auth/refresh",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "refresh"
+                  ]
+                },
+                "description": "Perbarui access token menggunakan refresh token.\nScript test otomatis update collection variable access_token.\n\nPanggil ini ketika request lain return 401.\n\nResponse 200:\n{\n  data: { accessToken: '...' }\n}"
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "Text",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"status\": \"fail\",\n  \"message\": \"Refresh token tidak valid\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "5. Logout",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  pm.collectionVariables.set('access_token', '');",
+                  "  pm.collectionVariables.set('refresh_token', '');",
+                  "  pm.test('Logout berhasil — token dihapus', () => pm.response.to.have.status(200));",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refresh_token}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/logout",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "logout"
+              ]
+            },
+            "description": "Hapus refresh token dari DB dan akhiri sesi.\nScript test otomatis kosongkan collection variables access_token & refresh_token.\n\nResponse 200:\n{\n  status: 'success',\n  message: 'Logout berhasil'\n}"
+          },
+          "response": [
+            {
+              "name": "200 — Logout berhasil",
+              "originalRequest": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"refreshToken\": \"{{refresh_token}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{base_url}}/auth/logout",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "logout"
+                  ]
+                },
+                "description": "Hapus refresh token dari DB dan akhiri sesi.\nScript test otomatis kosongkan collection variables access_token & refresh_token.\n\nResponse 200:\n{\n  status: 'success',\n  message: 'Logout berhasil'\n}"
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "Text",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"Logout berhasil\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Audits",
+      "item": [
+        {
+          "name": "1. Create Audit (Analisis Influencer)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.status === 'success') {",
+                  "  pm.collectionVariables.set('audit_id', res.data.id);",
+                  "  pm.test('Audit selesai — ID tersimpan', () => pm.response.to.have.status(201));",
+                  "  pm.test('Hasil AI ada', () => {",
+                  "    pm.expect(res.data.bot_percentage).to.be.a('number');",
+                  "    pm.expect(res.data.risk_label).to.be.oneOf(['low','medium','high']);",
+                  "  });",
+                  "} else {",
+                  "  pm.test('Audit gagal: ' + res.message, () => {});",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ig_username\": \"influencer_lokal\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/audits",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "audits"
+              ]
+            },
+            "description": "Buat audit baru untuk username Instagram yang diberikan.  \nProses: Backend → AI service → Backend → simpan ke DB → return hasil.\n\nWaktu proses: \\~5–30 detik (tergantung AI service).\n\nAturan ig_username:\n\n- Tanpa karakter @\n    \n- Min 1 karakter, max 30 karakter\n    \n\nScript test otomatis simpan audit_id ke collection variables.\n\nResponse 201:  \n{  \ndata: {  \nid, user_id, ig_username,  \nstatus: 'completed',  \ntotal_sample,  \nbot_percentage,  \nreal_percentage,  \nrisk_label: 'low' | 'medium' | 'high',  \nrecommendation,  \nraw_ai_response,  \nerror_message,  \ncreated_at, updated_at  \n}  \n}"
+          },
+          "response": [
+            {
+              "name": "201 — Audit selesai",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{access_token}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"ig_username\": \"influencer_lokal\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{base_url}}/audits",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "audits"
+                  ]
+                },
+                "description": "Buat audit baru untuk username Instagram yang diberikan.  \nProses: Backend → AI service → Backend → simpan ke DB → return hasil.\n\nWaktu proses: \\~5–30 detik (tergantung AI service).\n\nAturan ig_username:\n\n- Tanpa karakter @\n    \n- Min 1 karakter, max 30 karakter\n    \n\nScript test otomatis simpan audit_id ke collection variables.\n\nResponse 201:  \n{  \ndata: {  \nid, user_id, ig_username,  \nstatus: 'completed',  \ntotal_sample,  \nbot_percentage,  \nreal_percentage,  \nrisk_label: 'low' | 'medium' | 'high',  \nrecommendation,  \nraw_ai_response,  \nerror_message,  \ncreated_at, updated_at  \n}  \n}"
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "Text",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"Audit berhasil diselesaikan\",\n  \"data\": {\n    \"id\": \"550e8400-e29b-41d4-a716-446655440000\",\n    \"user_id\": \"uuid\",\n    \"ig_username\": \"influencer_lokal\",\n    \"status\": \"completed\",\n    \"total_sample\": 100,\n    \"bot_percentage\": 35.00,\n    \"real_percentage\": 65.00,\n    \"risk_label\": \"high\",\n    \"recommendation\": \"Hati-hati. Akun ini memiliki tingkat pengikut bot yang cukup tinggi (di atas 30%). Kerjasama endorsement berisiko memiliki ROI yang rendah.\",\n    \"raw_ai_response\": {\n      \"status\": \"success\",\n      \"target_akun\": \"@influencer_lokal\",\n      \"total_sampel_diperiksa\": 100,\n      \"metrik_kualitas\": {\n        \"persentase_bot\": 35.0,\n        \"persentase_asli\": 65.0,\n        \"timestamp\": \"2026-05-03T21:05:11+07:00\"\n      },\n      \"rekomendasi\": \"Hati-hati...\"\n    },\n    \"error_message\": null,\n    \"created_at\": \"2026-05-07T15:05:11Z\",\n    \"updated_at\": \"2026-05-07T15:05:14Z\"\n  }\n}"
+            },
+            {
+              "name": "400 — Username mengandung @",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{access_token}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"ig_username\": \"influencer_lokal\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{base_url}}/audits",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "audits"
+                  ]
+                },
+                "description": "Buat audit baru untuk username Instagram yang diberikan.  \nProses: Backend → AI service → Backend → simpan ke DB → return hasil.\n\nWaktu proses: \\~5–30 detik (tergantung AI service).\n\nAturan ig_username:\n\n- Tanpa karakter @\n    \n- Min 1 karakter, max 30 karakter\n    \n\nScript test otomatis simpan audit_id ke collection variables.\n\nResponse 201:  \n{  \ndata: {  \nid, user_id, ig_username,  \nstatus: 'completed',  \ntotal_sample,  \nbot_percentage,  \nreal_percentage,  \nrisk_label: 'low' | 'medium' | 'high',  \nrecommendation,  \nraw_ai_response,  \nerror_message,  \ncreated_at, updated_at  \n}  \n}"
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "Text",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"status\": \"fail\",\n  \"message\": \"Username tidak boleh mengandung @\"\n}"
+            },
+            {
+              "name": "400 — Username kosong",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{access_token}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"ig_username\": \"influencer_lokal\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{base_url}}/audits",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "audits"
+                  ]
+                },
+                "description": "Buat audit baru untuk username Instagram yang diberikan.  \nProses: Backend → AI service → Backend → simpan ke DB → return hasil.\n\nWaktu proses: \\~5–30 detik (tergantung AI service).\n\nAturan ig_username:\n\n- Tanpa karakter @\n    \n- Min 1 karakter, max 30 karakter\n    \n\nScript test otomatis simpan audit_id ke collection variables.\n\nResponse 201:  \n{  \ndata: {  \nid, user_id, ig_username,  \nstatus: 'completed',  \ntotal_sample,  \nbot_percentage,  \nreal_percentage,  \nrisk_label: 'low' | 'medium' | 'high',  \nrecommendation,  \nraw_ai_response,  \nerror_message,  \ncreated_at, updated_at  \n}  \n}"
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "Text",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"status\": \"fail\",\n  \"message\": \"Username Instagram wajib diisi\"\n}"
+            },
+            {
+              "name": "500 — AI service gagal",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{access_token}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"ig_username\": \"influencer_lokal\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{base_url}}/audits",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "audits"
+                  ]
+                },
+                "description": "Buat audit baru untuk username Instagram yang diberikan.  \nProses: Backend → AI service → Backend → simpan ke DB → return hasil.\n\nWaktu proses: \\~5–30 detik (tergantung AI service).\n\nAturan ig_username:\n\n- Tanpa karakter @\n    \n- Min 1 karakter, max 30 karakter\n    \n\nScript test otomatis simpan audit_id ke collection variables.\n\nResponse 201:  \n{  \ndata: {  \nid, user_id, ig_username,  \nstatus: 'completed',  \ntotal_sample,  \nbot_percentage,  \nreal_percentage,  \nrisk_label: 'low' | 'medium' | 'high',  \nrecommendation,  \nraw_ai_response,  \nerror_message,  \ncreated_at, updated_at  \n}  \n}"
+              },
+              "status": "Internal Server Error",
+              "code": 500,
+              "_postman_previewlanguage": "Text",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"status\": \"fail\",\n  \"message\": \"AI service gagal memproses akun ini\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "2. Get All Audits (Riwayat)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Pagination ada', () => {",
+                  "  const res = pm.response.json();",
+                  "  pm.expect(res.data.pagination).to.have.property('total');",
+                  "  pm.expect(res.data.data).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/audits?page=1&limit=10",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "audits"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Ambil semua riwayat audit milik user yang sedang login.\nDiurutkan terbaru di atas.\n\nPanggil sekali saat pertama load halaman untuk render sidebar riwayat.\nSetelah POST /audits sukses, cukup prepend hasilnya ke state — tidak perlu refetch.\n\nField yang dikembalikan per item:\nid, ig_username, status, bot_percentage, risk_label, recommendation, created_at\n\n(Detail lengkap ada di GET /audits/:id)"
+          },
+          "response": [
+            {
+              "name": "200 — Berhasil",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{access_token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/audits?page=1&limit=10",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "audits"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "10"
+                    }
+                  ]
+                },
+                "description": "Ambil semua riwayat audit milik user yang sedang login.\nDiurutkan terbaru di atas.\n\nPanggil sekali saat pertama load halaman untuk render sidebar riwayat.\nSetelah POST /audits sukses, cukup prepend hasilnya ke state — tidak perlu refetch.\n\nField yang dikembalikan per item:\nid, ig_username, status, bot_percentage, risk_label, recommendation, created_at\n\n(Detail lengkap ada di GET /audits/:id)"
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "Text",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"Riwayat audit berhasil diambil\",\n  \"data\": {\n    \"data\": [\n      {\n        \"id\": \"uuid\",\n        \"ig_username\": \"influencer_lokal\",\n        \"status\": \"completed\",\n        \"bot_percentage\": 35.00,\n        \"risk_label\": \"high\",\n        \"recommendation\": \"Hati-hati...\",\n        \"created_at\": \"2026-05-07T15:05:11Z\"\n      }\n    ],\n    \"pagination\": {\n      \"page\": 1,\n      \"limit\": 10,\n      \"total\": 24\n    }\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "3. Get Audit By ID (Detail)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Semua field detail ada', () => {",
+                  "  const d = pm.response.json().data;",
+                  "  pm.expect(d).to.have.property('bot_percentage');",
+                  "  pm.expect(d).to.have.property('real_percentage');",
+                  "  pm.expect(d).to.have.property('raw_ai_response');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/audits/{{audit_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "audits",
+                "{{audit_id}}"
+              ]
+            },
+            "description": "Ambil detail lengkap satu audit berdasarkan ID.\nPanggil saat user klik kartu di sidebar riwayat.\n\nField lengkap:\nid, ig_username, status,\ntotal_sample, bot_percentage, real_percentage,\nrisk_label, recommendation, raw_ai_response,\nerror_message, created_at, updated_at\n\nBackend memverifikasi bahwa audit ini milik user yang request (via JWT)."
+          },
+          "response": [
+            {
+              "name": "200 — Detail audit",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{access_token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/audits/{{audit_id}}",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "audits",
+                    "{{audit_id}}"
+                  ]
+                },
+                "description": "Ambil detail lengkap satu audit berdasarkan ID.\nPanggil saat user klik kartu di sidebar riwayat.\n\nField lengkap:\nid, ig_username, status,\ntotal_sample, bot_percentage, real_percentage,\nrisk_label, recommendation, raw_ai_response,\nerror_message, created_at, updated_at\n\nBackend memverifikasi bahwa audit ini milik user yang request (via JWT)."
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "Text",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"Detail audit berhasil diambil\",\n  \"data\": {\n    \"id\": \"550e8400-e29b-41d4-a716-446655440000\",\n    \"ig_username\": \"influencer_lokal\",\n    \"status\": \"completed\",\n    \"total_sample\": 100,\n    \"bot_percentage\": 35.00,\n    \"real_percentage\": 65.00,\n    \"risk_label\": \"high\",\n    \"recommendation\": \"Hati-hati. Akun ini memiliki tingkat pengikut bot yang cukup tinggi (di atas 30%). Kerjasama endorsement berisiko memiliki ROI yang rendah.\",\n    \"raw_ai_response\": {\n      \"status\": \"success\",\n      \"target_akun\": \"@influencer_lokal\",\n      \"total_sampel_diperiksa\": 100,\n      \"metrik_kualitas\": {\n        \"persentase_bot\": 35.0,\n        \"persentase_asli\": 65.0,\n        \"timestamp\": \"2026-05-03T21:05:11+07:00\"\n      },\n      \"rekomendasi\": \"Hati-hati...\"\n    },\n    \"error_message\": null,\n    \"created_at\": \"2026-05-07T15:05:11Z\",\n    \"updated_at\": \"2026-05-07T15:05:14Z\"\n  }\n}"
+            },
+            {
+              "name": "403 — Bukan milik user ini",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{access_token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/audits/{{audit_id}}",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "audits",
+                    "{{audit_id}}"
+                  ]
+                },
+                "description": "Ambil detail lengkap satu audit berdasarkan ID.\nPanggil saat user klik kartu di sidebar riwayat.\n\nField lengkap:\nid, ig_username, status,\ntotal_sample, bot_percentage, real_percentage,\nrisk_label, recommendation, raw_ai_response,\nerror_message, created_at, updated_at\n\nBackend memverifikasi bahwa audit ini milik user yang request (via JWT)."
+              },
+              "status": "Forbidden",
+              "code": 403,
+              "_postman_previewlanguage": "Text",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"status\": \"fail\",\n  \"message\": \"Anda tidak berhak mengakses audit ini\"\n}"
+            },
+            {
+              "name": "404 — Audit tidak ditemukan",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{access_token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/audits/{{audit_id}}",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "audits",
+                    "{{audit_id}}"
+                  ]
+                },
+                "description": "Ambil detail lengkap satu audit berdasarkan ID.\nPanggil saat user klik kartu di sidebar riwayat.\n\nField lengkap:\nid, ig_username, status,\ntotal_sample, bot_percentage, real_percentage,\nrisk_label, recommendation, raw_ai_response,\nerror_message, created_at, updated_at\n\nBackend memverifikasi bahwa audit ini milik user yang request (via JWT)."
+              },
+              "status": "Not Found",
+              "code": 404,
+              "_postman_previewlanguage": "Text",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"status\": \"fail\",\n  \"message\": \"Audit tidak ditemukan\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Profile",
+      "item": [
+        {
+          "name": "1. Get Profile",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Stats ada', () => {",
+                  "  const d = pm.response.json().data;",
+                  "  pm.expect(d.stats).to.have.property('total_audits');",
+                  "  pm.expect(d.stats).to.have.property('avg_bot_percentage');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/profile",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "profile"
+              ]
+            },
+            "description": "Ambil data profil user beserta statistik penggunaan.\n\nResponse 200:\n{\n  data: {\n    id, name, email, avatar_url, provider, created_at,\n    stats: {\n      total_audits: 12,\n      avg_bot_percentage: 28.40\n    }\n  }\n}"
+          },
+          "response": [
+            {
+              "name": "200 — Profil + statistik",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{access_token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/profile",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "profile"
+                  ]
+                },
+                "description": "Ambil data profil user beserta statistik penggunaan.\n\nResponse 200:\n{\n  data: {\n    id, name, email, avatar_url, provider, created_at,\n    stats: {\n      total_audits: 12,\n      avg_bot_percentage: 28.40\n    }\n  }\n}"
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "Text",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"Profil berhasil diambil\",\n  \"data\": {\n    \"id\": \"uuid\",\n    \"name\": \"Budi Santoso\",\n    \"email\": \"budi@gmail.com\",\n    \"avatar_url\": \"https://lh3.googleusercontent.com/...\",\n    \"provider\": \"google\",\n    \"created_at\": \"2026-01-15T08:00:00Z\",\n    \"stats\": {\n      \"total_audits\": 12,\n      \"avg_bot_percentage\": 28.40\n    }\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "2. Update Profile",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Nama terupdate', () => {",
+                  "  const d = pm.response.json().data;",
+                  "  pm.expect(d).to.have.property('name');",
+                  "  pm.expect(d).to.have.property('updated_at');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Budi Santoso Updated\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/profile",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "profile"
+              ]
+            },
+            "description": "Update nama tampilan user.\nHanya field 'name' yang bisa diubah — email tidak bisa (dari Google).\n\nAturan name: min 2 karakter, max 100 karakter.\n\nResponse 200:\n{\n  data: { id, name, email, avatar_url, updated_at }\n}"
+          },
+          "response": [
+            {
+              "name": "200 — Profil diperbarui",
+              "originalRequest": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{access_token}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Budi Santoso Updated\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{base_url}}/profile",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "profile"
+                  ]
+                },
+                "description": "Update nama tampilan user.\nHanya field 'name' yang bisa diubah — email tidak bisa (dari Google).\n\nAturan name: min 2 karakter, max 100 karakter.\n\nResponse 200:\n{\n  data: { id, name, email, avatar_url, updated_at }\n}"
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "Text",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"Profil berhasil diperbarui\",\n  \"data\": {\n    \"id\": \"uuid\",\n    \"name\": \"Budi Santoso Updated\",\n    \"email\": \"budi@gmail.com\",\n    \"avatar_url\": \"https://...\",\n    \"updated_at\": \"2026-05-07T16:00:00Z\"\n  }\n}"
+            },
+            {
+              "name": "400 — Nama terlalu pendek",
+              "originalRequest": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{access_token}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Budi Santoso Updated\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{base_url}}/profile",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "profile"
+                  ]
+                },
+                "description": "Update nama tampilan user.\nHanya field 'name' yang bisa diubah — email tidak bisa (dari Google).\n\nAturan name: min 2 karakter, max 100 karakter.\n\nResponse 200:\n{\n  data: { id, name, email, avatar_url, updated_at }\n}"
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "Text",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"status\": \"fail\",\n  \"message\": \"Nama minimal 2 karakter\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Quick Tests",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/health",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "health"
+              ]
+            },
+            "description": "Cek apakah server berjalan.\nTambahkan endpoint ini di Express jika belum ada:\n\napp.get('/api/health', (req, res) => res.json({ status: 'ok' }));"
+          },
+          "response": [
+            {
+              "name": "200 — Server aktif",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/health",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "health"
+                  ]
+                },
+                "description": "Cek apakah server berjalan.\nTambahkan endpoint ini di Express jika belum ada:\n\napp.get('/api/health', (req, res) => res.json({ status: 'ok' }));"
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "Text",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{ \"status\": \"ok\" }"
+            }
+          ]
+        },
+        {
+          "name": "401 — Request tanpa token",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/audits",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "audits"
+              ]
+            },
+            "description": "Test: request ke endpoint protected tanpa Authorization header.\nHarus return 401."
+          },
+          "response": [
+            {
+              "name": "401 — Unauthorized",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/audits",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "audits"
+                  ]
+                },
+                "description": "Test: request ke endpoint protected tanpa Authorization header.\nHarus return 401."
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "_postman_previewlanguage": "Text",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"status\": \"fail\",\n  \"message\": \"Token tidak ditemukan\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "400 — Create Audit dengan @",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ig_username\": \"@influencer_lokal\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/audits",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "audits"
+              ]
+            },
+            "description": "Test validasi: username mengandung @ harus return 400."
+          },
+          "response": []
+        },
+        {
+          "name": "404 — Audit ID tidak ada",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/audits/00000000-0000-0000-0000-000000000000",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "audits",
+                "00000000-0000-0000-0000-000000000000"
+              ]
+            },
+            "description": "Test: audit dengan UUID yang tidak ada harus return 404."
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000/api"
+    },
+    {
+      "key": "access_token",
+      "value": ""
+    },
+    {
+      "key": "refresh_token",
+      "value": ""
+    },
+    {
+      "key": "audit_id",
+      "value": ""
+    }
+  ]
+}
