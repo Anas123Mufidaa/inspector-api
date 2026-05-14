@@ -47,7 +47,6 @@ model Audit {
 
   status               AuditStatus @default(pending)
 
-  // Dari AI response
   total_sample         Int?
   bot_percentage       Decimal?    @db.Decimal(5, 2)
   real_percentage      Decimal?    @db.Decimal(5, 2)

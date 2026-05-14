@@ -8,20 +8,16 @@ export const createAudit = async (req, res, next) => {
     const { ig_username } = req.validated;
     const user_id = req.user.id;
 
-    // 1. Buat record pending dulu
     const audit = await AuditRepositories.createAudit({ user_id, ig_username });
 
-    // 2. Hit AI service
     let aiResult;
     try {
       aiResult = await analyzeInstagramAccount(ig_username);
     } catch (err) {
-      // Simpan status failed agar riwayat tetap tercatat
       await AuditRepositories.updateAuditFailed(audit.id, err.message);
       return next(err);
     }
 
-    // 3. Update audit dengan hasil AI
     const completed = await AuditRepositories.updateAuditCompleted(audit.id, aiResult);
 
     return response(res, 201, 'Audit berhasil diselesaikan', completed);

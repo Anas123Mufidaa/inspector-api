@@ -9,7 +9,7 @@ import {
 
 const router = Router();
 
-router.use(authMiddleware); // semua audit routes wajib login
+router.use(authMiddleware); 
 
 router.post('/',    validateCreateAudit, createAudit);
 router.get('/',     getAllAudits);

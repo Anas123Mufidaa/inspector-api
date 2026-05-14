@@ -3,7 +3,6 @@ import { InvariantError } from '../exceptions/index.js';
 
 const AI_BASE_URL = process.env.AI_SERVICE_URL;
 
-// Derive risk label dari persentase bot
 export const deriveRiskLabel = (botPercentage) => {
   if (botPercentage < 20) return 'low';
   if (botPercentage <= 30) return 'medium';
@@ -11,7 +10,7 @@ export const deriveRiskLabel = (botPercentage) => {
 };
 
 export const analyzeInstagramAccount = async (ig_username) => {
-  const res = await fetch(`${AI_BASE_URL}/analyze`, {
+  const res = await fetch(`${AI_BASE_URL}/api/cek-bot`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ username: ig_username }),
