@@ -4,11 +4,11 @@ import { AuthenticationError } from '../exceptions/index.js';
 
 const authMiddleware = async (req, _res, next) => {
   try {
-    
-    // if (process.env.NODE_ENV === 'development') {
-    //   req.user = { id: '62f5ac10-9442-4ab5-baec-9c4a84a9c7ce' };
-    //   return next();
-    // }
+
+    if (process.env.NODE_ENV === 'development') {
+      req.user = { id: '62f5ac10-9442-4ab5-baec-9c4a84a9c7ce' };
+      return next();
+    }
 
     const authHeader = req.headers.authorization;
     if (!authHeader?.startsWith('Bearer ')) {
