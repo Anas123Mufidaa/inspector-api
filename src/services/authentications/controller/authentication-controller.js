@@ -3,31 +3,47 @@ import AuthenticationRepositories from '../repositories/authentication-repositor
 import { InvariantError } from '../../../exceptions/index.js';
 import response from '../../../utils/response.js';
 
+// export const googleCallback = async (req, res, next) => {
+//   try {
+//     const user = req.user; 
+
+//     const accessToken = TokenManager.generateAccessToken({ id: user.id });
+//     const refreshToken = TokenManager.generateRefreshToken({ id: user.id });
+
+//     await AuthenticationRepositories.addRefreshToken(refreshToken, user.id);
+
+//     return response(res, 200, 'Authentication berhasil', {
+//       accessToken,
+//       refreshToken,
+//       user: {
+//         id: user.id,
+//         name: user.name,
+//         email: user.email,
+//         avatar_url: user.avatar_url,
+//       },
+//     });
+//   } catch (err) {
+//     return next(err);
+//   }
+// };
+
 export const googleCallback = async (req, res, next) => {
   try {
-    const user = req.user; 
+    const user = req.user;
 
-    const accessToken = TokenManager.generateAccessToken({ id: user.id });
+    const accessToken  = TokenManager.generateAccessToken({ id: user.id });
     const refreshToken = TokenManager.generateRefreshToken({ id: user.id });
 
     await AuthenticationRepositories.addRefreshToken(refreshToken, user.id);
 
-    return response(res, 200, 'Authentication berhasil', {
-      accessToken,
-      refreshToken,
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        avatar_url: user.avatar_url,
-      },
+    const params = new URLSearchParams({
+      token:   accessToken,
+      refresh: refreshToken,
     });
 
-    // return res.redirect(
-    //   'http://localhost:5173'
-    // );
+    return res.redirect(`${process.env.FRONTEND_URL}/auth/google/callback?${params}`);
   } catch (err) {
-    return next(err);
+    return res.redirect(`${process.env.FRONTEND_URL}/auth/google/callback?error=login_gagal`);
   }
 };
 
