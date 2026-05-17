@@ -1,5 +1,3 @@
-import createServer from '../src/server/index.js';
-
+const createServer = require('../src/server/index.js');
 const app = createServer();
-
-export default app;
+module.exports = app;

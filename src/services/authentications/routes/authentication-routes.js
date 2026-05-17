@@ -1,35 +1,15 @@
-import { Router } from 'express';
-import passport from '../../../security/passport.js';
-import {
-  googleCallback,
-  refreshToken,
-  logout,
-} from '../controller/authentication-controller.js';
-import { validateRefreshToken } from '../validator/authentication-validator.js';
-import authMiddleware from '../../../middlewares/auth.js';
-import { getMe } from '../controller/authentication-controller.js';
-
+const { Router }   = require('express');
+const passport     = require('../../../security/passport.js');
+const authMiddleware = require('../../../middlewares/auth.js');
+const { googleCallback, refreshToken, logout, getMe } = require('../controller/authentication-controller.js');
+const { validateRefreshToken } = require('../validator/authentication-validator.js');
 
 const router = Router();
 
-// Redirect ke Google consent screen
-router.get(
-  '/google',
-  passport.authenticate('google', { scope: ['profile', 'email'], session: false })
-);
+router.get('/google',          passport.authenticate('google', { scope: ['profile', 'email'], session: false }));
+router.get('/google/callback', passport.authenticate('google', { session: false, failureRedirect: '/login' }), googleCallback);
+router.get('/me',              authMiddleware, getMe);
+router.put('/refresh',         validateRefreshToken, refreshToken);
+router.delete('/logout',       validateRefreshToken, logout);
 
-// Google callback setelah user consent
-router.get(
-  '/google/callback',
-  passport.authenticate('google', { session: false, failureRedirect: '/login' }),
-  googleCallback
-);
-
-// Refresh access token
-router.put('/refresh', validateRefreshToken, refreshToken);
-
-router.get('/me', authMiddleware, getMe);
-
-router.delete('/logout', validateRefreshToken, logout);
-
-export default router;
+module.exports = router;

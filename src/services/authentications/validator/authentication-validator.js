@@ -1,5 +1,5 @@
-import Joi from 'joi';
-import { InvariantError } from '../../../exceptions/index.js';
+const Joi = require('joi');
+const { InvariantError } = require('../../../exceptions/index.js');
 
 const refreshTokenSchema = Joi.object({
   refreshToken: Joi.string().required().messages({
@@ -8,9 +8,11 @@ const refreshTokenSchema = Joi.object({
   }),
 });
 
-export const validateRefreshToken = (req, _res, next) => {
+const validateRefreshToken = (req, _res, next) => {
   const { error, value } = refreshTokenSchema.validate(req.body);
   if (error) return next(new InvariantError(error.details[0].message));
   req.validated = value;
   return next();
 };
+
+module.exports = { validateRefreshToken };

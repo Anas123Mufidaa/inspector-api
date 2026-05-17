@@ -1,9 +1,9 @@
-import express from 'express';
-import cors from 'cors';
-import dotenv from 'dotenv';
-import passport from '../security/passport.js';
-import router from '../routes/index.js';
-import errorMiddleware from '../middlewares/error.js';
+const express = require('express');
+const cors = require('cors');
+const dotenv = require('dotenv');
+const passport = require('../security/passport.js');
+const router = require('../routes/index.js');
+const errorMiddleware = require('../middlewares/error.js');
 
 dotenv.config();
 
@@ -112,4 +112,4 @@ const HTML = `<!doctype html>
   </body>
 </html>`;
 
-export default createServer;
+module.exports = createServer;

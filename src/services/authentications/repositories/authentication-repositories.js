@@ -1,5 +1,5 @@
-import prisma from '../../../utils/prisma.js';
-import { InvariantError } from '../../../exceptions/index.js';
+const prisma = require('../../../utils/prisma.js');
+const { InvariantError } = require('../../../exceptions/index.js');
 
 const AuthenticationRepositories = {
   async addRefreshToken(token, user_id) {
@@ -31,4 +31,4 @@ const AuthenticationRepositories = {
   },
 };
 
-export default AuthenticationRepositories;
+module.exports = AuthenticationRepositories;

@@ -1,5 +1,7 @@
-export { default as AuthenticationError } from './authentication-error.js';
-export { default as AuthorizationError } from './authorization-error.js';
-export { default as NotFoundError } from './not-found-error.js';
-export { default as InvariantError } from './invariant-error.js';
-export { default as ClientError } from './client-error.js';
+module.exports = {
+  AuthenticationError: require('./authentication-error.js'),
+  AuthorizationError:  require('./authorization-error.js'),
+  NotFoundError:       require('./not-found-error.js'),
+  InvariantError:      require('./invariant-error.js'),
+  ClientError:         require('./client-error.js'),
+};

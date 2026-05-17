@@ -1,5 +1,5 @@
-import prisma from '../../../utils/prisma.js';
-import AuditRepositories from '../../audits/repositories/audit-repositories.js';
+const prisma = require('../../../utils/prisma.js');
+const AuditRepositories = require('../../audits/repositories/audit-repositories.js');
 
 const ProfileRepositories = {
   async getProfile(user_id) {
@@ -7,14 +7,9 @@ const ProfileRepositories = {
     const stats = await AuditRepositories.getUserAuditStats(user_id);
     return { ...user, stats };
   },
-
-  async updateProfile(user_id, { name }) {
-    return prisma.user.update({
-      where: { id: user_id },
-      data:  { name },
-      select: { id: true, name: true, email: true, avatar_url: true, updated_at: true },
-    });
-  },
+  updateProfile: (user_id, { name }) =>
+    prisma.user.update({ where: { id: user_id }, data: { name },
+      select: { id: true, name: true, email: true, avatar_url: true, updated_at: true } }),
 };
 
-export default ProfileRepositories;
+module.exports = ProfileRepositories;

@@ -4,4 +4,4 @@ const response = (res, statusCode, message, data = null) => {
   return res.status(statusCode).json(payload);
 };
 
-export default response;
+module.exports = response;

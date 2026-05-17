@@ -1,81 +1,46 @@
-import TokenManager from '../../../security/token-manager.js';
-import AuthenticationRepositories from '../repositories/authentication-repositories.js';
-import { InvariantError } from '../../../exceptions/index.js';
-import response from '../../../utils/response.js';
+const TokenManager = require('../../../security/token-manager.js');
+const AuthenticationRepositories = require('../repositories/authentication-repositories.js');
+const { InvariantError } = require('../../../exceptions/index.js');
+const response = require('../../../utils/response.js');
 
-// export const googleCallback = async (req, res, next) => {
-//   try {
-//     const user = req.user; 
-
-//     const accessToken = TokenManager.generateAccessToken({ id: user.id });
-//     const refreshToken = TokenManager.generateRefreshToken({ id: user.id });
-
-//     await AuthenticationRepositories.addRefreshToken(refreshToken, user.id);
-
-//     return response(res, 200, 'Authentication berhasil', {
-//       accessToken,
-//       refreshToken,
-//       user: {
-//         id: user.id,
-//         name: user.name,
-//         email: user.email,
-//         avatar_url: user.avatar_url,
-//       },
-//     });
-//   } catch (err) {
-//     return next(err);
-//   }
-// };
-
-export const googleCallback = async (req, res, next) => {
+const googleCallback = async (req, res, next) => {
   try {
     const user = req.user;
-
     const accessToken  = TokenManager.generateAccessToken({ id: user.id });
     const refreshToken = TokenManager.generateRefreshToken({ id: user.id });
-
     await AuthenticationRepositories.addRefreshToken(refreshToken, user.id);
-
-    const params = new URLSearchParams({
-      token:   accessToken,
-      refresh: refreshToken,
-    });
-
-    return res.redirect(`${process.env.FRONTEND_URL}/auth/google/callback?${params}`);
+    return res.redirect(
+      `${process.env.FRONTEND_URL}/auth/callback?token=${accessToken}&refresh=${refreshToken}`
+    );
   } catch (err) {
-    return res.redirect(`${process.env.FRONTEND_URL}/auth/google/callback?error=login_gagal`);
+    return next(err);
   }
 };
 
-export const refreshToken = async (req, res, next) => {
+const refreshToken = async (req, res, next) => {
   try {
     const { refreshToken: token } = req.validated;
-
     await AuthenticationRepositories.verifyRefreshToken(token);
-
     const { id } = TokenManager.verifyRefreshToken(token);
     const accessToken = TokenManager.generateAccessToken({ id });
-
     return response(res, 200, 'Access token berhasil diperbarui', { accessToken });
   } catch (err) {
     return next(err);
   }
 };
 
-export const logout = async (req, res, next) => {
+const logout = async (req, res, next) => {
   try {
     const { refreshToken: token } = req.validated;
-
     await AuthenticationRepositories.verifyRefreshToken(token);
     await AuthenticationRepositories.deleteRefreshToken(token);
-
     return response(res, 200, 'Logout berhasil');
   } catch (err) {
     return next(err);
-  } 
+  }
 };
 
-export const getMe = async (req, res, next) => {
+const getMe = async (req, res, next) => {
   try {
     return response(res, 200, 'Data user berhasil diambil', {
       id:         req.user.id,
@@ -88,3 +53,5 @@ export const getMe = async (req, res, next) => {
     return next(err);
   }
 };
+
+module.exports = { googleCallback, refreshToken, logout, getMe };

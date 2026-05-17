@@ -1,5 +1,5 @@
-import Joi from 'joi';
-import { InvariantError } from '../../../exceptions/index.js';
+const Joi = require('joi');
+const { InvariantError } = require('../../../exceptions/index.js');
 
 const updateProfileSchema = Joi.object({
   name: Joi.string().min(2).max(100).required().messages({
@@ -9,9 +9,11 @@ const updateProfileSchema = Joi.object({
   }),
 });
 
-export const validateUpdateProfile = (req, _res, next) => {
+const validateUpdateProfile = (req, _res, next) => {
   const { error, value } = updateProfileSchema.validate(req.body);
   if (error) return next(new InvariantError(error.details[0].message));
   req.validated = value;
   return next();
 };
+
+module.exports = { validateUpdateProfile };
