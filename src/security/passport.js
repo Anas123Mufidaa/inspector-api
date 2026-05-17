@@ -1,18 +1,14 @@
-import passport from 'passport';
-import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
-import UserRepositories from '../services/users/repositories/user-repositories.js';
-
 passport.use(
   new GoogleStrategy(
     {
-      clientID: process.env.GOOGLE_CLIENT_ID,
+      clientID:     process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      callbackURL: process.env.GOOGLE_CALLBACK_URL,
+      callbackURL:  process.env.GOOGLE_CALLBACK_URL,
     },
     async (_accessToken, _refreshToken, profile, done) => {
       try {
         const { id: provider_id, displayName: name, emails, photos } = profile;
-        const email = emails[0].value;
+        const email      = emails[0].value;
         const avatar_url = photos[0]?.value ?? null;
 
         let user = await UserRepositories.findByProviderId(provider_id);
@@ -26,7 +22,7 @@ passport.use(
             provider_id,
           });
         } else {
-          user = await UserRepositories.updateUser(user.id, { name, avatar_url });
+          user = await UserRepositories.updateUser(user.id, { avatar_url });
         }
 
         return done(null, user);
@@ -36,5 +32,3 @@ passport.use(
     }
   )
 );
-
-export default passport;

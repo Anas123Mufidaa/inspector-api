@@ -22,7 +22,7 @@ const UserRepositories = {
   async updateUser(id, { name, avatar_url }) {
     return prisma.user.update({
       where: { id },
-      data: { name, avatar_url },
+      data: { avatar_url },
     });
   },
 };
