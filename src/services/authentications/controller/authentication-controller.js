@@ -9,8 +9,15 @@ const googleCallback = async (req, res, next) => {
     const accessToken  = TokenManager.generateAccessToken({ id: user.id });
     const refreshToken = TokenManager.generateRefreshToken({ id: user.id });
     await AuthenticationRepositories.addRefreshToken(refreshToken, user.id);
+
+    const getFrontendUrl = () => {
+      return process.env.NODE_ENV === 'production'
+        ? process.env.FRONTEND_URL_PROD
+        : process.env.FRONTEND_URL;
+    };
+    
     return res.redirect(
-      `${process.env.FRONTEND_URL}/auth/callback?token=${accessToken}&refresh=${refreshToken}`
+      `${getFrontendUrl()}/auth/callback?token=${accessToken}&refresh=${refreshToken}`
     );
   } catch (err) {
     return next(err);

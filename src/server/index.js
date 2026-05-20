@@ -10,7 +10,13 @@ dotenv.config();
 const createServer = () => {
   const app = express();
 
-  app.use(cors({ origin: process.env.FRONTEND_URL, credentials: true }));
+  app.use(cors({
+    origin: [
+      process.env.FRONTEND_URL_DEV,
+      process.env.FRONTEND_URL_PROD,
+    ],
+    credentials: true,
+  }));
   app.use(express.json());
   app.use(passport.initialize());
 
